@@ -1,0 +1,7 @@
+.DS_Store
+._*
+*~
+node_modules
+*.js
+*.js.map
+*.d.ts

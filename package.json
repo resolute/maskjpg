@@ -1,0 +1,63 @@
+{
+  "name": "@resolute/maskjpg",
+  "version": "0.0.0",
+  "description": "",
+  "bin": {
+    "maskjpg": "./cli.js"
+  },
+  "main": "./",
+  "types": "./",
+  "files": [
+    "*.js",
+    "*.d.ts"
+  ],
+  "scripts": {
+    "build": "npm run clean && tsc && chmod 755 cli.js && prettier --write *.js *.d.ts && (eslint --fix *.js > /dev/null 2>&1; true)",
+    "release": "np",
+    "prepublishOnly": "npm test && npm run build",
+    "clean": "del-cli *.js *.js.map *.d.ts",
+    "test": "echo TODO"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/resolute/maskjpg.git"
+  },
+  "bugs": {
+    "url": "https://github.com/resolute/maskjpg/issues"
+  },
+  "homepage": "https://github.com/resolute/maskjpg",
+  "author": "Resolute Digital",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {
+    "canvas": "*",
+    "imagemin": "*",
+    "imagemin-jpegtran": "*",
+    "imagemin-mozjpeg": "*",
+    "probe-image-size": "*",
+    "sharp": "*"
+  },
+  "devDependencies": {
+    "@types/imagemin": "*",
+    "@types/imagemin-jpegtran": "*",
+    "@types/imagemin-mozjpeg": "*",
+    "@types/sharp": "*",
+    "@typescript-eslint/eslint-plugin": "*",
+    "@typescript-eslint/parser": "*",
+    "del-cli": "*",
+    "eslint": "*",
+    "eslint-config-airbnb-base": "*",
+    "eslint-plugin-import": "*",
+    "np": "*",
+    "prettier": "*",
+    "ts-node": "*",
+    "tslib": "*",
+    "typescript": "*"
+  },
+  "keywords": [],
+  "publishConfig": {
+    "access": "public"
+  },
+  "license": "ISC"
+}
