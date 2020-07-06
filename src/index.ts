@@ -1,4 +1,5 @@
 import { promises as fs } from 'fs';
+import crypto = require('crypto');
 import Canvas = require('canvas');
 import probe = require('probe-image-size');
 import sharp = require('sharp');
@@ -52,22 +53,40 @@ const getRandomIntInclusive = (min: number, max: number) => {
   return Math.floor(Math.random() * (maxInt - minInt + 1)) + minInt;
 };
 
-const generateSvg = (width: number, height: number, uri: string, className?: string) => {
+const twoHashIds = (input: Buffer) => {
+  const hash = crypto.createHash('md4');
+  hash.update(input);
+  const base64 = hash.digest().toString('base64');
+  const match = base64.match(/([a-zA-Z][a-zA-Z0-9]{2}).*?([a-zA-Z][a-zA-Z0-9]{2})/);
+  if (!match) {
+    throw new Error(`Unable to find acceptable ID in base64 encoded hash “${base64}”`);
+  }
+  return [match[1], match[2]];
+};
+
+const generateSvg = (
+  width: number,
+  height: number,
+  jpgBuffer: Buffer,
+  uri: string,
+  className?: string,
+) => {
   let classString = '';
   if (className) {
     classString = ` class="${className}"`;
   }
-  const randIdA = String.fromCharCode(getRandomIntInclusive(97, 122)); // a-z
-  const randIdB = String.fromCharCode(getRandomIntInclusive(97, 122)); // a-z
+  // const randIdA = String.fromCharCode(getRandomIntInclusive(97, 122)); // a-z
+  // const randIdB = String.fromCharCode(getRandomIntInclusive(97, 122)); // a-z
+  const [idA, idB] = twoHashIds(jpgBuffer);
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" ${classString}>
   <defs>
-    <filter id="${randIdA}">
-      <feOffset dy="-${height}" in="SourceGraphic" result="${randIdB}"></feOffset>
-      <feColorMatrix in="${randIdB}" result="${randIdB}" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0"></feColorMatrix>
-      <feComposite in="SourceGraphic" in2="${randIdB}" operator="in"></feComposite>
+    <filter id="${idA}">
+      <feOffset dy="-${height}" in="SourceGraphic" result="${idB}"></feOffset>
+      <feColorMatrix in="${idB}" result="${idB}" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0"></feColorMatrix>
+      <feComposite in="SourceGraphic" in2="${idB}" operator="in"></feComposite>
     </filter>
   </defs>
-  <image width="100%" height="200%" xlink:href="${uri}" filter="url(#${randIdA})"></image>
+  <image width="100%" height="200%" xlink:href="${uri}" filter="url(#${idA})"></image>
 </svg>`;
 };
 
@@ -118,6 +137,7 @@ const maskjpg = async ({
   const svg = generateSvg(
     actualWidth,
     actualHeight,
+    optJpgMask,
     destination,
     className,
   );
