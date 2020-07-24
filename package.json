@@ -1,7 +1,7 @@
 {
   "name": "@resolute/maskjpg",
   "version": "0.0.2",
-  "description": "",
+  "description": "Alpha PNG → SVG + JPG",
   "bin": {
     "maskjpg": "./cli.js"
   },
@@ -31,16 +31,14 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "canvas": "*",
+    "minimist": "*",
+    "got": "*",
     "imagemin": "*",
-    "imagemin-jpegtran": "*",
     "imagemin-mozjpeg": "*",
-    "probe-image-size": "*",
     "sharp": "*"
   },
   "devDependencies": {
     "@types/imagemin": "*",
-    "@types/imagemin-jpegtran": "*",
     "@types/imagemin-mozjpeg": "*",
     "@types/sharp": "*",
     "@typescript-eslint/eslint-plugin": "*",
