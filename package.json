@@ -1,6 +1,6 @@
 {
   "name": "@resolute/maskjpg",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Alpha PNG → SVG + JPG",
   "bin": {
     "maskjpg": "./cli.js"
