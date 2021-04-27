@@ -31,15 +31,15 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
+    "got": "~11",
+    "imagemin": "~7",
+    "imagemin-mozjpeg": "~9",
     "minimist": "*",
-    "got": "*",
-    "imagemin": "*",
-    "imagemin-mozjpeg": "*",
     "sharp": "*"
   },
   "devDependencies": {
-    "@types/imagemin": "*",
-    "@types/imagemin-mozjpeg": "*",
+    "@types/imagemin": "~7",
+    "@types/imagemin-mozjpeg": "~8",
     "@types/sharp": "*",
     "@typescript-eslint/eslint-plugin": "*",
     "@typescript-eslint/parser": "*",
