@@ -1,7 +1,18 @@
 #!/usr/bin/env node
-import { promises as fs } from 'fs';
-import minimist = require('minimist');
-import maskjpg = require('./index');
+
+// EXAMPLE CLI
+// npx tsx cli.ts ~/srv/web/banner/src/pages/banner/Arrowhead/DSE/_shared/patient.png > ~/Desktop/broken-out/patient.svg --uri="./" --jpg=/Users/adam/Desktop/broken-out/patient.jpg
+// npx tsx cli.ts ~/srv/web/banner/src/pages/banner/Arrowhead/DSE/_shared/light-burst@1x.png > ~/Desktop/broken-out/light-burst.svg --uri="./light-burst.jpg" --jpg=/Users/adam/Desktop/broken-out/light-burst.jpg 
+
+// npx tsx cli.ts ~/srv/web/banner/src/pages/banner/Arrowhead/DSE/_shared/patient.png > ~/Desktop/patient.svg
+// npx tsx cli.ts ~/srv/web/banner/src/pages/banner/Arrowhead/DSE/_shared/light-burst@1x.png > ~/Desktop/light-burst.svg
+
+
+import { promises as fs } from "fs";
+import minimist from "minimist";
+// import minimist = require('minimist');
+import maskjpg from "./index";
+// import maskjpg = require('./index');
 
 const run = async (input: string, argv: MaskjpgCommandLineOptions) => {
   const { svg, jpg } = await maskjpg(input, {
@@ -16,11 +27,11 @@ const run = async (input: string, argv: MaskjpgCommandLineOptions) => {
 };
 
 interface MaskjpgCommandLineOptions {
-  _: string[]
-  quality?: number,
-  width?: number,
-  uri?: string,
-  jpg?: string,
+  _: string[];
+  quality?: number;
+  width?: number;
+  uri?: string;
+  jpg?: string;
 }
 
 const usage = `
@@ -40,6 +51,6 @@ Options:
 const argv = minimist<MaskjpgCommandLineOptions>(process.argv.slice(2));
 if (argv._.length !== 1) {
   process.stderr.write(usage);
-  throw new Error('Please specify at least and only one PNG image.');
+  throw new Error("Please specify at least and only one PNG image.");
 }
 run(argv._[0], argv);

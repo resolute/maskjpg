@@ -5,6 +5,7 @@
   "bin": {
     "maskjpg": "./cli.js"
   },
+  "type": "module",
   "main": "./",
   "types": "./",
   "files": [
@@ -31,27 +32,18 @@
     "node": ">=14.0.0"
   },
   "dependencies": {
-    "got": "~11",
-    "imagemin": "~7",
-    "imagemin-mozjpeg": "~9",
-    "minimist": "*",
-    "sharp": "*"
+    "js-xxhash": "^5.0.1",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
-    "@types/imagemin": "~7",
-    "@types/imagemin-mozjpeg": "~8",
-    "@types/sharp": "*",
-    "@typescript-eslint/eslint-plugin": "*",
-    "@typescript-eslint/parser": "*",
-    "del-cli": "*",
-    "eslint": "*",
-    "eslint-config-airbnb-base": "*",
-    "eslint-plugin-import": "*",
-    "np": "*",
-    "prettier": "*",
-    "ts-node": "*",
-    "tslib": "*",
-    "typescript": "*"
+    "@types/imagemin": "^9.0.1",
+    "@types/imagemin-mozjpeg": "^8.0.4",
+    "@types/node": "^24.10.4",
+    "del-cli": "^7.0.0",
+    "minimist": "^1.2.8",
+    "prettier": "^3.7.4",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   },
   "keywords": [],
   "publishConfig": {

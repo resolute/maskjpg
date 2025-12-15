@@ -1,20 +1,17 @@
-import sharp = require('sharp');
-import imagemin = require('imagemin');
-import imageminMozjpeg = require('imagemin-mozjpeg');
-// eslint-disable-next-line import/first
-import {
-  integer, sanitizeQuality, readInput, twoHashIds,
-} from './util';
+import sharp from "sharp";
+import { integer, readInput, sanitizeQuality, twoHashIds } from "./util";
+import { encode as encodeB64 } from "./base64";
+// import imagemin from "imagemin";
+// import imageminMozjpeg from "imagemin-mozjpeg";
+// import { ImagePool } from "@squoosh/lib";
+// const imagePool = new ImagePool(1);
 
 /**
  * Perform “premultpilied alpha” on RGBA color values
  * @param alpha 0-255 alpha value
  */
-const preMultiplyPixel = (alpha: number) =>
-  /**
-   * @param color 0-255 color (r, g, b) pixel value
-   */
-  (color: number) => {
+function preMultiplyPixel(alpha: number) {
+  return (color: number) => {
     // if (alpha === 0) {
     //   return 0;
     // }
@@ -22,6 +19,7 @@ const preMultiplyPixel = (alpha: number) =>
     const preMultipliedValue = Math.round((color / 255) * (alpha / 255) * 255);
     return (((preMultipliedValue / 255) / (alpha / 255)) * 255) | 0;
   };
+}
 
 /**
  * Generate a buffer 2x the size of the input, where the top half is
@@ -29,9 +27,9 @@ const preMultiplyPixel = (alpha: number) =>
  * the alpha mask of the original with some gamma correction applied.
  * @param buf Buffer of RGBA bitmap pixel data
  */
-const makeBitmapMask = (buf: Buffer) => {
+function makeBitmapMask(buf: Uint8Array) {
   const bufferLength = buf.length;
-  const origAndMask = new Uint8Array(bufferLength << 1);
+  const origAndMask = new Uint8Array(bufferLength * 2);
   for (let i = 0; i <= bufferLength - 4; i += 4) {
     const a = buf[i + 3];
     const alphaWithGammaCorrection = (((a / 255) ** 0.45) * 255) | 0;
@@ -48,8 +46,8 @@ const makeBitmapMask = (buf: Buffer) => {
     origAndMask[bufferLength + i + 2] = alphaWithGammaCorrection;
     origAndMask[bufferLength + i + 3] = 255;
   }
-  return Buffer.from(origAndMask.buffer);
-};
+  return origAndMask;
+}
 
 /**
  * Generate `<svg>` string
@@ -63,16 +61,21 @@ const makeBitmapMask = (buf: Buffer) => {
  * @param params.idA unique XML/SVG id used to reference filter
  * @param params.idB unique XML/SVG id used to reference filter
  */
-const generateSvg = ({
-  width, height, uri, attr, idA, idB,
+function generateSvg({
+  width,
+  height,
+  uri,
+  attr,
+  idA,
+  idB,
 }: {
-  width: number,
-  height: number,
-  uri: string,
-  attr: { [key: string]: string },
-  idA: string,
-  idB: string,
-}) => {
+  width: number;
+  height: number;
+  uri: string;
+  attr: { [key: string]: string };
+  idA: string;
+  idB: string;
+}) {
   // { key1: 'val1', key2: 'val2', … } → 'key1="val1" key2="val2"…'
   const attrString = Object.entries({
     width,
@@ -81,40 +84,42 @@ const generateSvg = ({
     ...attr,
   })
     .map(([key, value]) => `${key}="${value}"`)
-    .join(' ');
+    .join(" ");
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ${attrString}>` +
-    '<defs>' +
+    "<defs>" +
     `<filter id="${idA}">` +
     `<feOffset dy="-${height}" in="SourceGraphic" result="${idB}"></feOffset>` +
     `<feColorMatrix in="${idB}" result="${idB}" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0"></feColorMatrix>` +
     `<feComposite in="SourceGraphic" in2="${idB}" operator="in"></feComposite>` +
-    '</filter>' +
-    '</defs>' +
+    "</filter>" +
+    "</defs>" +
     `<image width="100%" height="200%" xlink:href="${uri}" filter="url(#${idA})"></image>` +
-    '</svg>';
-};
+    "</svg>";
+}
 
 /**
  * Normalize command options
  * @param options command options
  */
-const normalizeOptions = (options: {
-  width?: number,
-  quality?: number,
-  uri?: string,
-  attr?: { [key: string]: string }
-}) => {
+function normalizeOptions(options: {
+  width?: number;
+  quality?: number;
+  uri?: string;
+  attr?: { [key: string]: string };
+}) {
   const width = integer(options?.width, 0);
   const quality = sanitizeQuality(options?.quality, undefined);
-  const uri = typeof options.uri === 'string' && options.uri !== '' ? options.uri : undefined;
-  const attr = typeof options.attr === 'object' ? options.attr : {};
+  const uri = typeof options.uri === "string" && options.uri !== ""
+    ? options.uri
+    : undefined;
+  const attr = typeof options.attr === "object" ? options.attr : {};
   return {
     width,
     quality,
     uri,
     attr,
   };
-};
+}
 
 /**
  * Alpha PNG → `<svg>` + JPG
@@ -125,18 +130,18 @@ const normalizeOptions = (options: {
  * @param options.uri URI to reference the JPG in SVG
  * @param options.attr additional attributes for the SVG
  */
-const maskjpg = async (
-  input: string | Buffer,
-  options: {
-    width?: number,
-    quality?: number,
-    uri?: string,
-    attr?: { [key: string]: string }
-  } = {},
-) => {
+async function maskjpg(input: string | Uint8Array, options: {
+  width?: number;
+  quality?: number;
+  uri?: string;
+  attr?: { [key: string]: string };
+} = {}) {
   // normalize options
   const {
-    width: requestedWidth, quality, uri, attr,
+    width: requestedWidth,
+    quality,
+    uri,
+    attr,
   } = normalizeOptions(options);
 
   // read the input PNG into a Node Buffer
@@ -163,7 +168,7 @@ const maskjpg = async (
 
   // this only works with a 4-channel PNG input
   if (channels !== 4) {
-    throw new Error('Input must contain an alpha channel');
+    throw new Error("Input must contain an alpha channel");
   }
 
   // Heavy lifting: generate a JPG 2x the height of the input PNG. See
@@ -174,7 +179,7 @@ const maskjpg = async (
   const sharpJpg = sharp(bitmapMask, {
     raw: {
       width,
-      height: height << 1,
+      height: height * 2,
       channels,
     },
   });
@@ -184,12 +189,15 @@ const maskjpg = async (
     .jpeg({ quality: 100 })
     .toBuffer();
 
-  // run max quality JPG buffer through MozJPEG with user desired quality
-  const jpg = await imagemin.buffer(jpgUnoptimized, {
-    plugins: [
-      imageminMozjpeg({ quality, quantTable: 3 }),
-    ],
-  });
+  // // run max quality JPG buffer through MozJPEG with user desired quality
+  // const jpg = await imagemin.buffer(jpgUnoptimized, {
+  //   plugins: [
+  //     imageminMozjpeg({ quality, quantTable: 3 }),
+  //   ],
+  // });
+  // // const image = imagePool.ingestImage(jpgUnoptimized);
+  // // const jpg = await image.encode({ mozjpeg: {} });
+  const jpg = jpgUnoptimized;
 
   // generate deterministic IDs based on the MD4 hash of the final optimized JPG
   const [idA, idB] = twoHashIds(jpg);
@@ -198,13 +206,13 @@ const maskjpg = async (
   const svg = generateSvg({
     width,
     height,
-    uri: uri ?? `data:image/jpeg;base64,${jpg.toString('base64')}`,
+    uri: uri ?? `data:image/jpeg;base64,${encodeB64(jpg)}`,
     attr,
     idA,
     idB,
   });
 
   return { svg, jpg };
-};
+}
 
-export = maskjpg;
+export default maskjpg;

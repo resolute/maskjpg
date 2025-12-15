@@ -1,6 +1,9 @@
-import fs = require('fs');
-import crypto = require('crypto');
-import got = require('got');
+// import fs = require('fs');
+// import crypto = require('crypto');
+// import got = require('got');
+
+import { readFile } from "node:fs/promises";
+import { xxHash32 } from "js-xxhash";
 
 /**
  * Coerce a value to a number.
@@ -53,26 +56,31 @@ export const sanitizeQuality = <T, U>(arg: T, falseReturn: number | U) => {
  * Load a file or URL into a buffer.
  * @param input file path or URL
  */
-export const readFileOrUrl = (input: string) => {
+export const readFileOrUrl = async (input: string) => {
   const isLocalFile = !/^https?:\/\//.test(input);
   if (!isLocalFile) {
-    return got.default(input, { resolveBodyOnly: true, responseType: 'buffer' });
+    // return got.default(input, { resolveBodyOnly: true, responseType: 'buffer' });
+    const response = await fetch(input);
+    return new Uint8Array(await response.arrayBuffer());
   }
-  return fs.promises.readFile(input);
+  return new Uint8Array(await readFile(input));
 };
 
 /**
  * Accept a path to a file, URL, or a buffer and return it as a buffer.
  * @param input file path, URL, or Buffer
  */
-export const readInput = (input: string | Buffer) => {
+export const readInput = (input: string | Uint8Array) => {
   if (!input) {
-    throw new Error('Input must be a filepath, URL, or buffer.');
+    throw new Error("Input must be a filepath, URL, or buffer.");
   }
-  if (Buffer.isBuffer(input)) {
+  if (typeof input === "string") {
+    return readFileOrUrl(input);
+  }
+  if (input instanceof Uint8Array) {
     return input;
   }
-  return readFileOrUrl(input);
+  throw new Error("Input must be a filepath, URL, or buffer.");
 };
 
 /**
@@ -80,13 +88,16 @@ export const readInput = (input: string | Buffer) => {
  * given input buffer. Strings will _always_ begin with a letter.
  * @param input buffer
  */
-export const twoHashIds = (input: Buffer) => {
-  const hash = crypto.createHash('md4');
-  hash.update(input);
-  const base64 = hash.digest().toString('base64');
-  const match = base64.match(/([a-zA-Z][a-zA-Z0-9]{2}).*?([a-zA-Z][a-zA-Z0-9]{2})/);
+export const twoHashIds = (input: Uint8Array) => {
+  const hash = xxHash32(input).toString(36);
+  const match = hash.match(
+    // /([a-zA-Z][a-zA-Z0-9]{2}).*?([a-zA-Z][a-zA-Z0-9]{2})/,
+    /(.{3})(.{3})/,
+  );
   if (!match) {
-    throw new Error(`Unable to find acceptable ID in base64 encoded hash “${base64}”`);
+    throw new Error(
+      `Unable to find acceptable ID in base64 encoded hash “${hash}”`,
+    );
   }
   return [match[1], match[2]];
 };

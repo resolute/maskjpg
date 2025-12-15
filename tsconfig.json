@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "declaration": true,
-    "module": "commonjs",
+    "esModuleInterop": true,
+    "module": "ESNext",
     "moduleResolution": "node",
     "noImplicitAny": false,
     "outDir": ".",
@@ -10,7 +11,7 @@
     "sourceMap": false,
     "strict": true,
     "stripInternal": true,
-    "target": "es2018"
+    "target": "esnext"
   },
   "include": [
     "**/*.ts"
